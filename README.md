@@ -4,6 +4,13 @@ Projeto de desenvolvimento e teste de uma aplicação de cálculo de mortgage em
 
 A solução deve integrar análise de requisitos, arquitetura modular, implementação, testes com Google Test, colaboração no GitHub e integração contínua.
 
+## Estado atual
+
+- Implementada a biblioteca C++ da regra de domínio e 12 testes unitários Google Test.
+- Configurados CMake/CTest e workflow GitHub Actions; a CI ainda precisa ser executada no GitHub para validar o pipeline.
+- A interface CLI e os documentos finais continuam pendentes.
+- A regra Female, 51–55 anos retorna erro de fator não definido provisoriamente; a decisão ainda aguarda aprovação dos requisitos.
+
 ## 1. Objetivo
 
 Desenvolver uma aplicação confiável que calcule o valor de mortgage com base em gênero, idade e salário.
@@ -143,52 +150,49 @@ A função `mortgage` deve coordenar validação, seleção do fator e cálculo.
 
 As exceções e seus significados devem ser documentados antes da implementação. A ausência de fator deve ser distinguida de uma entrada fora do intervalo permitido.
 
-## 7. Estrutura proposta do repositório
+## 7. Estrutura do repositório
 
 ```text
-mortgage-application/
+.
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
+├── docs/
+│   └── traceability-matrix.md
 ├── include/
 │   └── mortgage.hpp
 ├── src/
-│   ├── mortgage.cpp
-│   └── main.cpp
+│   └── mortgage.cpp
 ├── tests/
 │   └── mortgage_test.cpp
-├── docs/
-│   ├── requirements.md
-│   ├── architecture.md
-│   ├── traceability-matrix.md
-│   └── technical-report.md
+├── .gitignore
 ├── CMakeLists.txt
 └── README.md
 ```
 
-Essa estrutura é uma proposta de organização, não uma declaração de que todos os arquivos já foram implementados.
+O código de domínio fica separado da suíte de testes. O executável de linha de comando ainda não foi criado.
 
 ## 8. Tecnologias previstas
 
-- C++.
-- Google Test.
-- CMake.
+- C++17.
+- Google Test 1.17 (dependência do sistema neste ambiente).
+- CMake 3.16 ou superior.
 - Git e GitHub.
 - GitHub Actions.
 
-O padrão de C++ e as versões das ferramentas devem ser definidos no projeto e mantidos consistentes entre desenvolvimento e CI.
+O workflow instala CMake, GCC e Google Test no runner Ubuntu antes de configurar o build.
 
 ## 9. Build e execução dos testes
 
-Os comandos abaixo pressupõem que o `CMakeLists.txt` esteja configurado para compilar a aplicação, disponibilizar Google Test e registrar os testes no CTest.
+Instale CMake e Google Test, depois configure, compile e execute os testes registrados no CTest:
 
 ```bash
-cmake -S . -B build
+cmake -S . -B build -DBUILD_TESTING=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-A forma de obtenção do Google Test deve ser documentada no projeto.
+O build requer Google Test disponível para `find_package(GTest)`. O diretório `build/` é ignorado pelo Git.
 
 Não apresentar resultados de testes como comprovados antes de executar a suíte e preservar suas evidências.
 
@@ -306,19 +310,18 @@ Requirement
     → Evidence
 ```
 
-### Matriz inicial proposta
+### Matriz inicial
 
 | ID | Requisito | Função | Teste previsto |
 |---|---|---|---|
-| REQ-01 | Validar gênero | `validateInputs` | Gênero não reconhecido |
-| REQ-02 | Validar idade entre 18 e 55 | `validateInputs` | 17, 18, 55 e 56 |
-| REQ-03 | Validar salário entre 0 e 10.000 | `validateInputs` | Limites e valores externos |
-| REQ-04 | Selecionar fator Male | `selectFactor` | Todas as faixas e transições |
-| REQ-05 | Selecionar fator Female | `selectFactor` | Todas as faixas e transições |
-| REQ-06 | Calcular salário × fator | `calculateMortgage` | Resultados conhecidos |
-| REQ-07 | Tratar fator não definido | `selectFactor` | Female entre 51 e 55 |
+| RF-02 | Validar gênero | `validateInputs` | Gênero não reconhecido |
+| RF-03 | Validar idade entre 18 e 55 | `validateInputs` | 17, 18, 55 e 56 |
+| RF-04 | Validar salário entre 0 e 10.000 | `validateInputs` | Limites, valores externos, NaN e infinito |
+| RF-05 | Selecionar fatores por gênero e faixa | `selectFactor` | Todas as faixas e transições |
+| RF-06 | Calcular salário × fator | `calculateMortgage`, `calculate` | Resultados conhecidos |
+| RF-07 | Tratar falhas explicitamente | `calculate` | Entradas inválidas e Female entre 51 e 55 |
 
-Os nomes finais dos testes, links de CI e evidências devem ser adicionados após a implementação.
+Os nomes dos testes estão detalhados em [docs/traceability-matrix.md](docs/traceability-matrix.md). RF-01 (CLI), RF-08 (suíte registrada no CTest) e RF-09 (workflow CI) ainda precisam de validação/implementação complementar.
 
 ## 14. Critérios de aceite
 
